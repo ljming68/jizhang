@@ -5,10 +5,16 @@ import pymysql
 pymysql.install_as_MySQLdb() # ModuleNotFoundError: No module named 'MySQLdb'
 
 import os
+# from flask_cors import CORS
+import flask.scaffold
+flask.helpers._endpoint_from_view_func = flask.scaffold._endpoint_from_view_func
+from flask_restplus import Api,Resource
+
 
 
 app = Flask(__name__,static_url_path='/',static_folder='static')
 app.config['SECRET_KEY'] = os.urandom(24)
+api = Api(app)
 
 # 使用集成方式处理SQLAlchemy
 app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://root:lv1234@localhost:3306/jizhangmanage?charset=utf8'
@@ -16,6 +22,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False  # True: 跟踪数据库的
 app.config['SQLALCHEMY_POOL_SIZE'] = 100  # 数据库连接池的大小。默认是数据库引擎的默认值（通常是 5）
 # 实例化db对象
 db = SQLAlchemy(app)
+
+
 
 if __name__ == "__main__":
     

@@ -1,7 +1,8 @@
-from flask import Blueprint,request,session,make_response
+from flask import Blueprint,request,session,make_response,jsonify
 from model.users import Users
 from common.makecode import ImageCode,EmailCode
-import re, hashlib
+import re, hashlib,copy
+from flask_restplus import Resource
 
 
 user = Blueprint('user',__name__)
@@ -23,27 +24,45 @@ def ecode():
         return 'email-invalid'
     
     code = EmailCode().gen_email_code()
+    print(code)
+    res = {}
+    res['success'] = False
+    res['code'] = 200001
+    res['message'] = '发送失败'
     # print(code)
     try:
         EmailCode().send_email(email,code)
         # 将邮箱验证码保存在Session中
         session['ecode'] = code
-        return 'send-success'
+
+        res['success'] = True
+        res['code'] = 10000
+        res['message'] = '发送成功'
+        return jsonify(res)
     except:
-        return 'send-fail'
+        return jsonify(res)
 
 @user.route('/login',methods=['POST'])
-# index index_show 不可以写成index 
 def login():
     user = Users()
-    username = request.form.get('username').strip()
-    password = request.form.get('password').strip()
-    vcode = request.form.get('vcode').lower().strip()
+    # json 处理传过来的payload数据
+    # data = request.get_json(silent=True)
+    # print(data)
+    # print(data['username']) #123
+
+    username = request.form.get('userName').strip()
+    password = request.form.get('passWord').strip()
+    vcode = request.form.get('imgCode').strip()
+    
+    res = {}
+    res['success'] = False
+    res['code'] = 200001
+    res['message'] = '图片验证码错误'
 
     # 校验图形验证码是否正确 
     # ！！！0000 在正式上线时要删掉
     if vcode != session.get('vcode') and vcode != '0000':
-        return 'vcode-error'
+        return jsonify(res)
     
     else:
         #实现登录功能
@@ -55,7 +74,14 @@ def login():
             session['username'] = username
             session['nickname'] = result[0].nickname
             session['roleid'] = result[0].roleid
-            return 'login-success'
+
+            res['success'] = True
+            res['code'] = 10000
+            res['message'] = '登录成功'
+            return jsonify(res)
+        else:
+            res['message'] = '用户名或密码错误'
+            return jsonify(res)
         
 
 @user.route('/register',methods=['POST'])
@@ -91,3 +117,4 @@ def register():
         session['nickname'] = result.nickname
         session['roleid'] = result.roleid
         return 'register-success'
+
