@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask,session
 
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
@@ -23,6 +23,18 @@ app.config['SQLALCHEMY_POOL_SIZE'] = 100  # 数据库连接池的大小。默认
 # 实例化db对象
 db = SQLAlchemy(app)
 
+# 定义全局拦截器
+@app.before_request
+def before():
+    url = request.path
+    pass_list = ['/login','/register','/logout','/vcode','/ecode']
+    if url in pass_list :
+        pass
+    # elif session.get('islogin') is None:
+    #     res = {'code':10002,'message':'您还未登录','success':False}
+    #     return jsonify(res)
+
+
 
 
 if __name__ == "__main__":
@@ -32,4 +44,8 @@ if __name__ == "__main__":
 
     from controller.user import *
     app.register_blueprint(user)
+
+    from controller.admin import *
+    app.register_blueprint(admin)
+    
     app.run(debug=True)

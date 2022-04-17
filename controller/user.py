@@ -1,8 +1,9 @@
 from flask import Blueprint,request,session,make_response,jsonify
 from model.users import Users
 from common.makecode import ImageCode,EmailCode
-import re, hashlib,copy
+import re, hashlib,copy,math,json
 from flask_restplus import Resource
+from common import utlis
 
 
 user = Blueprint('user',__name__)
@@ -78,7 +79,13 @@ def login():
             res['success'] = True
             res['code'] = 10000
             res['message'] = '登录成功'
-            return jsonify(res)
+
+            # 将Cookie写入浏览器
+            response = make_response(jsonify(res))
+            # response.set_cookie('username', username, max_age=30*24*3600) #30天有效期
+            # response.set_cookie('password', password, max_age=30*24*3600)
+            return response
+            # return jsonify(res)
         else:
             res['message'] = '用户名或密码错误'
             return jsonify(res)
@@ -91,21 +98,30 @@ def register():
     password = request.form.get('password').strip()
     ecode = request.form.get('ecode').strip()
 
+    res = {}
+    res['success'] = False
+    res['code'] = 200001
+    res['message'] = '邮箱验证码错误'
+
     # 校验邮箱验证码是否正确
     if ecode != session.get('ecode'):
-        return 'ecode-error'
+        return jsonify(res)
     
     # 验证邮箱地址的正确性
     elif not re.match('.+@.+\..+', username):
-        return 'email-invalid'
+        res['message'] = '邮箱格式错误'
+        return jsonify(res)
     
     # 验证密码的有效性
-    elif len(password) < 5:
-        return 'password-invalid'
+    elif len(password) < 6:
+        res['message'] = '密码少于6位'
+        return jsonify(res)
     
     # 验证用户是否已经注册
     elif len(user.find_by_username(username)) > 0:
-        return 'user-repeated'
+        res['message'] = '用户已存在'
+        return jsonify(res)
+        
     
     else:
         # 实现注册功能
@@ -116,5 +132,19 @@ def register():
         session['username'] = username
         session['nickname'] = result.nickname
         session['roleid'] = result.roleid
-        return 'register-success'
+
+        res['success'] = True
+        res['code'] = 10000
+        res['message'] = '注册成功'
+
+
+        return jsonify(res)
+
+@user.route('/logout')
+def logout():
+    # 清空session ，页面跳转
+    session.clear()
+    res = {'code':10000,'message':'操作成功','success':True}
+    response = make_response(jsonify(res))
+    return response
 
