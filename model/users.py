@@ -54,5 +54,7 @@ class Users(DBase):
         return result
 
     # 删除用户
-    # def del_user_by_userid(self,userid):
-    #     result = dbsession.query
+    def del_user_by_userid(self,userid):
+        result = dbsession.query(Users).filter_by(userid = userid).delete()
+        dbsession.commit()
+        return result

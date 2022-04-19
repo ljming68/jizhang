@@ -47,5 +47,11 @@ if __name__ == "__main__":
 
     from controller.admin import *
     app.register_blueprint(admin)
+
+    from controller.jizhang import *
+    app.register_blueprint(jizhang)
+
+    from controller.pay import *
+    app.register_blueprint(pay)
     
     app.run(debug=True)

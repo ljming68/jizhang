@@ -141,10 +141,28 @@ def add_user():
 # 删除 用户 超管（独有）
 @admin.route('/user/<int:userid>',methods=['DELETE'])
 def del_user(userid):
+    res = {'code':10002,'message':'您没有权限','success':False}
+    if session.get('roleid') == 1 or session.get('roleid') == 2:
+        
+        return jsonify(res)
 
-  res = {'code':10002,'message':'您没有权限','success':False}
-  if session.get('roleid') == 1 or session.get('roleid') == 2:
-    return jsonify(res)
-    
     user = Users()
-    # result = user.
+    length = user.find_user_by_userid(userid)
+    if len(length) < 1:
+        res['message'] = '用户不存在'
+        return jsonify(res)
+    else:
+        result = user.del_user_by_userid(userid)
+        print(result)
+
+    res = {'code':10000,'message':'删除成功','success':True}
+    return jsonify(res)
+
+# 修改 用户 管理通用
+@admin.route('/user/<int:userid>',methods=['PUT'])
+def update_user(userid):
+    # formdata
+    # username = request.form.get('username').strip()
+    # password = request.form.get('password').strip()
+    res = {'code':10000,'message':'更新成功','success':True}
+    return jsonify(res)
