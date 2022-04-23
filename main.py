@@ -53,5 +53,8 @@ if __name__ == "__main__":
 
     from controller.pay import *
     app.register_blueprint(pay)
+
+    from controller.permission import *
+    app.register_blueprint(permission)
     
     app.run(debug=True)

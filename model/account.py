@@ -16,7 +16,7 @@ class Account(DBase):
   # 根据userid 找用户名下所有账户 
   def find_account_by_userid(self,start,count):
     result = dbsession.query(Account).filter_by(userid=session.get('userid'))\
-      .order_by(Account.payid.asc()).limit(count).offset(start).all()
+      .order_by(Account.payid.desc()).limit(count).offset(start).all()
     return result
 
   # 获取账户总数
@@ -52,3 +52,10 @@ class Account(DBase):
     dbsession.commit()
     return result
 
+  # 更新账户
+  def update_account(self,payid,dicts):
+    data = self.find_by_payid(payid)
+    if data:
+      {setattr(data, k, v) for k,v in dicts.items()}
+    dbsession.commit()
+    return data
