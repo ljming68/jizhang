@@ -8,7 +8,7 @@ dbsession, md, DBase = dbconnect()
 class Account(DBase):
   __table__ = Table('pay',md,autoload=True)
 
-
+# 用户使用
   def find_all(self):
     result = dbsession.query(Account).filter_by(userid = session.get('userid')).all()
     return result
@@ -46,7 +46,7 @@ class Account(DBase):
     dbsession.commit()
     return account
   
-  # 删除账户
+  # 删除账户 payid 用户
   def del_account_by_payid(self,payid):
     result = dbsession.query(Account).filter_by(userid=session.get('userid'),payid=payid).delete()
     dbsession.commit()
@@ -59,3 +59,16 @@ class Account(DBase):
       {setattr(data, k, v) for k,v in dicts.items()}
     dbsession.commit()
     return data
+
+
+# 超管使用
+  # 根据userid 找用户名下所有账户 
+  def admin_find_account_by_userid(self,userid):
+    result = dbsession.query(Account).filter_by(userid=userid).all()
+    return result
+  
+    # 删除账户 userid 超管
+  def admin_del_account_by_userid(self,userid):
+    result = dbsession.query(Account).filter_by(userid=userid).delete()
+    dbsession.commit()
+    return result

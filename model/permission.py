@@ -10,7 +10,6 @@ class Permission(DBase):
   def find_all(self):
     result = dbsession.query(Permission).filter_by().all()
     return result    
-    # 根据 payid 找 记录
   
   # 根据pid 找
   def find_by_pid(self,pid):
@@ -38,7 +37,9 @@ class Permission(DBase):
   # 更新权限
   def update_permission(self,pid,dicts):
     data = self.find_by_pid(pid)
-    if data[0]:
+    if data:
       {setattr(data[0], k, v) for k,v in dicts.items()}
+    else:
+      data = None
     dbsession.commit()
-    return data[0]
+    return data

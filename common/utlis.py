@@ -1,11 +1,12 @@
 def tuple_to_list(result):
     lists = []
     for i in range(len(result)):
-        ls = []
+        # ls = []
         for j in result[i]:
-            j = list(j)
-            ls.append(j)
-        lists.append(ls)
+            # print(j)
+            # j = list(j)
+            # ls.append(j)
+          lists.append(j)
     return lists
 
 def model_to_list(result):

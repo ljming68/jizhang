@@ -58,3 +58,9 @@ class Users(DBase):
         result = dbsession.query(Users).filter_by(userid = userid).delete()
         dbsession.commit()
         return result
+
+    # 更新用户角色
+    def update_user_roleid(self,userid,roleid):
+        user = self.find_user_by_userid(userid)
+        user[0].roleid = roleid
+        dbsession.commit()

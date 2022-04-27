@@ -1,48 +1,46 @@
 from flask import Blueprint,session,jsonify,request
 from common import utlis
-from model.permission import Permission
+from model.role import Role
 from model.roleperm import Roleperm
 import math
 
-permission = Blueprint('permission',__name__)
+role = Blueprint('role',__name__)
 
-@permission.before_request
+@role.before_request
 def before():
   if session.get('roleid') != 0:
     res = {'code':10002,'message':'没有权限','success':False}
     return jsonify(res)
 
-# 获取权限列表
-@permission.route('/permissionlist')
-def permissionlist():
+# 获取角色列表
+@role.route('/rolelist')
+def rolelist():
 
-  permission = Permission()
-  result = permission.find_all()
-  total = permission.get_permission_count()
+  role = Role()
+  result = role.find_all()
+  # total = role.get_role_count()
   rows = utlis.model_to_list(result)
-  print(rows,total)
+  print(rows)
 
   data = {}
   data['rows'] = rows
-  data['total'] = total
   res = {'code':10000,'message':'操作成功','success':True}
   res['data'] = data
 
   return jsonify(res)
 
-# 添加权限
-@permission.route('/permission',methods=['POST'])
-def add_permission():
+# 添加角色
+@role.route('/role',methods=['POST'])
+def add_role():
 
-  name = request.form.get('name').strip()
-  code = request.form.get('code').strip()
+  identity = request.form.get('identity').strip()
   description = request.form.get('description').strip()
 
   # 校验信息
 
-  #插入 权限
-  permission = Permission()
-  result = permission.insert_permission(name,code,description)
+  #插入 角色
+  role = Role()
+  result = role.insert_role(identity,description)
   if result:
     res = {'code':10000,'message':'操作成功','success':True}
   else:
@@ -50,45 +48,45 @@ def add_permission():
   
   return jsonify(res)
 
-# 删除权限
-@permission.route('/permission/<int:pid>',methods=['DELETE'])
-def del_permission(pid):
+# 删除角色
+@role.route('/role/<int:roleid>',methods=['DELETE'])
+def del_role(roleid):
   
-  # 先删除 roleper 表中的关联数据
+  # 先删除 roleperm等 表中的关联数据 同理其他表也是如此
   roleperm = Roleperm()
-  result = roleperm.find_roleperm_by_pid(pid)
+  result = roleperm.find_roleperm_by_roleid(roleid)
   if result:
-    roleperm.del_roleperm_by_pid(pid)
+    roleperm.del_roleperm_by_roleid(roleid)
 
-  permission = Permission()
-  result = permission.find_by_pid(pid)
+
+
+  role = Role()
+  result = role.find_by_roleid(roleid)
   if result:
-    permission.del_permission_by_pid(pid)
+    role.del_role_by_roleid(roleid)
     res = {'code':10000,'message':'删除成功','success':True}
   else:
     res = {'code':10002,'message':'操作失败','success':False}
   
   return jsonify(res)
 
-# 更新权限
-@permission.route('/permission/<int:pid>',methods=['PUT'])
-def update_permission(pid):
+# 更新角色
+@role.route('/role/<int:roleid>',methods=['PUT'])
+def update_role(roleid):
   
-  name = request.form.get('name').strip()
-  code = request.form.get('code').strip()
+  identity = request.form.get('identity').strip()
   description = request.form.get('description').strip()
 
   # 校验信息
 
 
   # 准备
-  permission = Permission()
+  role = Role()
   dicts = {}
-  dicts['name'] = name
-  dicts['code'] = code
+  dicts['identity'] = identity
   dicts['description'] = description
   # print(dicts)
-  result = permission.update_permission(pid,dicts)
+  result = role.update_role(roleid,dicts)
   # print(result)
   if result:
     res = {'code':10000,'message':'更新成功','success':True}
@@ -97,11 +95,11 @@ def update_permission(pid):
 
   return jsonify(res)
 
-# 根据id 获取权限
-@permission.route('/permission/<int:pid>')
-def get_permission(pid):
-  permission = Permission()
-  result = permission.find_by_pid(pid)
+# 根据id 获取角色
+@role.route('/role/<int:roleid>')
+def get_role(roleid):
+  role = Role()
+  result = role.find_by_roleid(roleid)
   row = utlis.model_to_list(result)
   # print(result)
   if result:

@@ -45,8 +45,8 @@ if __name__ == "__main__":
     from controller.user import *
     app.register_blueprint(user)
 
-    from controller.admin import *
-    app.register_blueprint(admin)
+    from controller.admins import *
+    app.register_blueprint(admins)
 
     from controller.jizhang import *
     app.register_blueprint(jizhang)
@@ -57,4 +57,10 @@ if __name__ == "__main__":
     from controller.permission import *
     app.register_blueprint(permission)
     
+    from controller.role import *
+    app.register_blueprint(role)
+
+    from controller.roleperm import *
+    app.register_blueprint(roleperm)
+
     app.run(debug=True)

@@ -45,12 +45,13 @@ class Record(DBase):
     dbsession.commit()
     return result
   
-  # 删除记录 payid
+  # 删除记录 payid 用户删除
   def del_record_by_payid(self,payid):
     result = dbsession.query(Record).filter_by(userid=session.get('userid'),payid=payid).delete()
     dbsession.commit()
     return result
-  
+
+
   # 添加转账记录
   def insert_transrecord(self,payid,payid2,note,amount):
     now = time.strftime('%Y-%m-%d %H:%M:%S')
@@ -65,7 +66,22 @@ class Record(DBase):
   # 更新记录
   def update_record(self,recordid,dicts):
     data = self.find_record_by_recordid(recordid)
-    if data[0]:
+    if data:
       {setattr(data[0], k, v) for k,v in dicts.items()}
+    else:
+      data = None
     dbsession.commit()
-    return data[0]
+    return data
+
+# 超管使用
+  # 删除记录 userid 超管
+  def admin_del_record_by_userid(self,userid):
+    result = dbsession.query(Record).filter_by(userid=userid).delete()
+    dbsession.commit()
+    return result
+  
+  # 根据userid 找用户名下所有记录
+  def admin_find_record_by_userid(self,userid):
+    result = dbsession.query(Record).filter_by(userid=userid).all()
+    return result
+  
