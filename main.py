@@ -63,4 +63,7 @@ if __name__ == "__main__":
     from controller.roleperm import *
     app.register_blueprint(roleperm)
 
+    from controller.count import *
+    app.register_blueprint(count)
+
     app.run(debug=True)

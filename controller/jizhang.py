@@ -1,7 +1,8 @@
 from flask import Blueprint,session,jsonify,request
 from model.record import Record
 from model.account import Account
-from common import utlis
+from model.count import Count
+from common import utlis,counts
 import math
 jizhang = Blueprint('jizhang',__name__)
 
@@ -43,6 +44,10 @@ def add_record():
     if payid:
       account = Account()
       account.update_balance(payid,amount)
+
+      count = Count()
+      count.insert_money(amount,recordtime,inandouttype)
+
     res = {'code':10000,'message':'操作成功','success':True}
   else:
     res = {'code':10002,'message':'操作失败','success':False}
@@ -73,7 +78,7 @@ def recordlist():
 
   return jsonify(res)
 
-# 删除记录 
+# 删除记录 用户删除
 @jizhang.route('/record/<int:recordid>',methods=['DELETE'])
 def del_record(recordid):
   record = Record()
@@ -87,6 +92,7 @@ def del_record(recordid):
 
   if len(result) == 1:
     record.del_record_by_recordid(recordid)
+    counts.update_count()
     res = {'code':10000,'message':'删除成功','success':True}
   else:
     res = {'code':10002,'message':'操作失败','success':False}
@@ -140,6 +146,7 @@ def update_record(recordid):
   result2 = record.update_record(recordid,dicts)
   if payid:
     account.update_balance(payid,amount)
+    counts.update_count()
   # print(result2)
   if result2:
     res = {'code':10000,'message':'更新成功','success':True}

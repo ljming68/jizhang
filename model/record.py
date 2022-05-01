@@ -1,4 +1,4 @@
-from sqlalchemy import Table
+from sqlalchemy import Table,func
 from common.database import dbconnect
 import time,random
 from flask import session
@@ -85,3 +85,36 @@ class Record(DBase):
     result = dbsession.query(Record).filter_by(userid=userid).all()
     return result
   
+# 统计 分类列表
+  def count_category_by_days(self,start_day,end_day,inandouttype):
+    if start_day == end_day:
+      result = dbsession.query(Record.category,func.sum(Record.amount))\
+      .filter_by(userid =session.get('userid'),recordtime=start_day,type=inandouttype)\
+      .filter(Record.category != '内部转账',)\
+      .order_by(Record.amount.asc())\
+      .group_by('category').all()
+    else:
+
+      result = dbsession.query(Record.category,func.sum(Record.amount))\
+        .filter_by(userid =session.get('userid'),type=inandouttype)\
+        .filter(Record.category != '内部转账',Record.recordtime.between(start_day, end_day))\
+        .order_by(Record.amount.asc())\
+        .group_by('category').all()
+    return result
+  
+  def count_detail_by_days(self,start_day,end_day,inandouttype):
+    if start_day == end_day:
+      result = dbsession.query(Record.category,Record.amount)\
+      .filter_by(userid =session.get('userid'),recordtime=start_day,type=inandouttype)\
+      .filter(Record.category != '内部转账',)\
+      .order_by(Record.amount.asc())\
+      .all()
+    else:
+
+      result = dbsession.query(Record.category,Record.amount,\
+        func.date_format(Record.recordtime, '%m-%d'))\
+        .filter_by(userid =session.get('userid'),type=inandouttype)\
+        .filter(Record.category != '内部转账',Record.recordtime.between(start_day, end_day))\
+        .order_by(Record.amount.asc())\
+        .all()
+    return result
