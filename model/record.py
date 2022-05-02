@@ -1,4 +1,4 @@
-from sqlalchemy import Table,func
+from sqlalchemy import Table,func,or_
 from common.database import dbconnect
 import time,random
 from flask import session
@@ -18,10 +18,57 @@ class Record(DBase):
       .filter_by(userid =session.get('userid')).filter(Record.category != '内部转账')\
       .order_by(Record.recordid.desc()).limit(count).offset(start).all()
     return result
-  
+
+  # 搜索 根据记录类型 
+  def find_record_by_category(self,content,start,count):
+    result = dbsession.query(Record)\
+      .filter_by(userid =session.get('userid'))\
+        .filter(Record.category != '内部转账',Record.category.like('%' + content + '%'))\
+      .order_by(Record.recordid.desc())
+    data = result.limit(count).offset(start).all()
+    count = result.count()
+    return data,count
+  # 搜索 根据收支类型
+  def find_record_by_type(self,content,start,count):
+    result = dbsession.query(Record)\
+      .filter_by(userid =session.get('userid'),type = content)\
+        .filter(Record.category != '内部转账')\
+      .order_by(Record.recordid.desc())
+    data = result.limit(count).offset(start).all()
+    count = result.count()
+    return data,count
+  # 搜索 根据 时间 
+  def find_record_by_date(self,start_day,end_day,start,count):
+    result = dbsession.query(Record)\
+      .filter_by(userid =session.get('userid'))\
+        .filter(Record.category != '内部转账',Record.recordtime.between(start_day, end_day))\
+      .order_by(Record.recordid.desc())
+    data = result.limit(count).offset(start).all()
+    count = result.count()
+    return data,count
+  # 搜索 根据钱
+  def find_record_by_amount(self,content,start,count):
+    result = dbsession.query(Record)\
+      .filter_by(userid =session.get('userid'))\
+        .filter(Record.category != '内部转账' , or_(Record.amount == content ,Record.amount == -content))\
+      .order_by(Record.recordid.desc())
+    data = result.limit(count).offset(start).all()
+    count = result.count()
+    return data,count
+    # 搜索 根据记录类型 
+  # 搜索 备注
+  def find_record_by_note(self,content,start,count):
+    result = dbsession.query(Record)\
+      .filter_by(userid =session.get('userid'))\
+        .filter(Record.category != '内部转账',Record.note.like('%' + content + '%'))\
+      .order_by(Record.recordid.desc())
+    data = result.limit(count).offset(start).all()
+    count = result.count()
+    return data,count
+
   # 获取记录总数
   def get_record_count(self):
-    result = dbsession.query(Record).filter_by(userid=session.get('userid')).count()
+    result = dbsession.query(Record).filter_by(userid=session.get('userid')).filter(Record.category != '内部转账').count()
     return result
 
   # 根据recordid 找记录
@@ -38,6 +85,21 @@ class Record(DBase):
     dbsession.add(record)
     dbsession.commit()
     return record
+  
+  # 批量添加记录
+  def batch_records(self,lists):
+    now = time.strftime('%Y-%m-%d %H:%M:%S')
+    for item in lists:
+      item['userid'] = session.get('userid')
+      item['createtime'] = now
+      item['updatetime'] = now
+      item['note'] = ''
+    print(lists)
+    dbsession.bulk_insert_mappings(
+      Record,lists
+    )
+    dbsession.commit()
+    return True
 
   # 删除记录 recordid
   def del_record_by_recordid(self,recordid):

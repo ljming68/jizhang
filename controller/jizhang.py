@@ -1,4 +1,4 @@
-from flask import Blueprint,session,jsonify,request
+from flask import Blueprint,session,jsonify,request,json
 from model.record import Record
 from model.account import Account
 from model.count import Count
@@ -168,4 +168,70 @@ def get_account(recordid):
   else:
     res = {'code':10002,'message':'操作失败','success':False}
 
+  return jsonify(res)
+
+@jizhang.route('/recordlist',methods=['POST'])
+def searchrecord():
+  page = int(request.args.get('page'))
+  size = int(request.args.get('size'))
+  total = int(request.args.get('total'))
+
+  mark = request.form.get('mark').strip()
+  content = request.form.get('content').strip()
+  print(mark,content)
+
+  start = (page - 1) * size
+  record = Record()
+  result = []
+  # 判断 content 类型
+  if mark == 'category':
+    result = record.find_record_by_category(content,start,size)
+  elif mark == 'type':
+    result = record.find_record_by_type(content,start,size)
+  elif mark == 'recordtime':
+    date = content.split('--')
+    start_day = date[0]
+    end_day = date[1]
+    result = record.find_record_by_date(start_day,end_day,start,size)
+  elif mark == 'amount':
+    content = float(content)
+    result = record.find_record_by_amount(content,start,size)
+  elif mark == 'note':
+    result = record.find_record_by_note(content,start,size)
+
+  
+  print(result)
+  # result = record.find_record_by_keyword(content,start,size)
+  if result:
+    data = list(result)
+    print(data)
+    rows = utlis.model_to_list(data[0])
+    total = data[1]
+    
+    data = {}
+    data['rows'] = rows
+    data['total'] = total
+    res = {'code':10000,'message':'操作成功','success':True}
+    res['data'] = data
+
+  return jsonify(res)
+
+# 添加记录 批量添加
+@jizhang.route('/records',methods=['POST'])
+def add_records():
+
+  # json 处理传过来的payload数据
+  records = request.form.get("records")
+  data_list = json.loads(records)
+  print(data_list)
+  record = Record()
+  result = record.batch_records(data_list)
+
+
+  if result:
+    res = {'code':10000,'message':'操作成功','success':True}
+  else:
+    res = {'code':10002,'message':'操作失败','success':False}
+
+  
   return jsonify(res)
