@@ -235,3 +235,37 @@ def add_records():
 
   
   return jsonify(res)
+
+# 导出账单
+@jizhang.route('/exportrecords',methods=['POST'])
+def export_records():
+  start_day = request.form.get('startDate')
+  end_day = request.form.get('endDate')
+  print(start_day,end_day)
+
+  record = Record()
+  result = record.export_records(start_day,end_day)
+
+  # 表头
+  names = 'category amount type recordtime note payid'.split()
+  rows = [dict(zip(names, r)) for r in result]
+  account = Account()
+  # print(rows)
+  for item in rows:
+    if(item['type'] == 0):
+      item['type'] = '支出'
+    else:
+      item['type'] = '收入'
+
+    item['amount'] = math.fabs(item['amount'])
+    if item['payid'] != None:
+      res = account.find_by_payid(item['payid'])
+      item['payid'] = res.payname
+  # print(rows)
+
+  data = {}
+  data['rows'] = rows
+  res = {'code':10000,'message':'操作成功','success':True}
+  res['data'] = data
+
+  return jsonify(res)

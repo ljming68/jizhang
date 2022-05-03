@@ -100,6 +100,14 @@ class Record(DBase):
     )
     dbsession.commit()
     return True
+  # 导出记录
+  def export_records(self,start_day,end_day):
+    result = dbsession.query(Record.category,Record.amount,Record.type\
+      ,func.date_format(Record.recordtime, '%Y-%m-%d'),Record.note,Record.payid)\
+      .filter_by(userid =session.get('userid'))\
+        .filter(Record.recordtime.between(start_day, end_day))\
+      .order_by(Record.recordtime.asc()).all()
+    return result
 
   # 删除记录 recordid
   def del_record_by_recordid(self,recordid):
