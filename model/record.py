@@ -66,6 +66,15 @@ class Record(DBase):
     count = result.count()
     return data,count
 
+  # 记录详情  payid
+  def find_record_by_payid(self,content,start,count):
+    result = dbsession.query(Record)\
+      .filter_by(userid =session.get('userid'),payid = content)\
+      .order_by(Record.recordid.desc())
+    data = result.limit(count).offset(start).all()
+    count = result.count()
+    return data,count
+
   # 获取记录总数
   def get_record_count(self):
     result = dbsession.query(Record).filter_by(userid=session.get('userid')).filter(Record.category != '内部转账').count()

@@ -1,7 +1,7 @@
-from sqlalchemy import Table
+from sqlalchemy import Table,func
 from common.database import dbconnect
 import time,random
-
+from flask import session
 dbsession, md, DBase = dbconnect()
 
 class Users(DBase):
@@ -19,7 +19,8 @@ class Users(DBase):
     # 通常用户注册时不建议填写太多资料，影响体验，可待用户后续逐步完善
     def do_register(self,username,password):
         now = time.strftime('%Y-%m-%d %H:%M:%S')
-        nickname = username.split('@')[0]  # 默认将邮箱账号前缀作为昵称
+        left = 'JZ_'
+        nickname =left + username.split('@')[0]  # 默认将邮箱账号前缀作为昵称
         avatar = str(random.randint(1, 15))  # 从15张头像图片中随机选择一张
         user = Users(username=username, password=password, roleid=2,
                     nickname=nickname, avatar=avatar + '.png', createtime=now, updatetime=now)
@@ -64,3 +65,45 @@ class Users(DBase):
         user = self.find_user_by_userid(userid)
         user[0].roleid = roleid
         dbsession.commit()
+    
+    # 获取个人信息
+    def get_userinfo(self):
+        result = self.find_user_by_userid(userid=session.get('userid'))
+        if result:
+            res = dbsession.query(Users.username,Users.nickname,Users.avatar,Users.qq,func.date_format(Users.createtime, '%Y-%m-%d'))\
+                .filter_by(userid=session.get('userid')).all()
+            return res
+    
+    # 获取简单个人信息
+    def get_simple_userinfo(self):
+        result = self.find_user_by_userid(userid=session.get('userid'))
+        if result:
+            res = dbsession.query(Users.userid,Users.nickname,Users.avatar,Users.roleid)\
+                .filter_by(userid=session.get('userid')).all()
+            return res
+
+    # 更新 个人信息
+    def update_userinfo(self,dicts):
+        data = self.find_user_by_userid(userid=session.get('userid'))
+        if data:
+            {setattr(data[0], k, v) for k,v in dicts.items()}
+        else:
+            data = None
+        dbsession.commit()
+        return data
+    
+    # 更新 密码
+    def update_password(self,password):
+        data = self.find_user_by_userid(userid=session.get('userid'))
+        if data:
+            data[0].password = password
+        dbsession.commit()
+        return data
+
+    # 更新 密码 管理员
+    def change_password(self,userid,password):
+        data = self.find_user_by_userid(userid=userid)
+        if data:
+            data[0].password = password
+        dbsession.commit()
+        return data

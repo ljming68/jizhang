@@ -48,5 +48,9 @@ class Roleperm(DBase):
       dbsession.bulk_insert_mappings(Roleperm, lists)
 
       dbsession.commit()
+    else:
+      dbsession.bulk_insert_mappings(Roleperm, lists)
+      dbsession.commit()
+
     
     return True

@@ -163,3 +163,34 @@ def update_user(userid):
     res = {'code':10002,'message':'操作失败','success':False}
 
   return jsonify(res)
+
+# 更新 用户密码
+@admins.route('/userpwd/<int:userid>',methods=['PUT'])
+def change_userpwd(userid):
+  
+  password = request.form.get('password').strip()
+  # 校验信息
+  if len(password) < 6:
+    res = {'code':10002,'message':'密码少于6位','success':False}
+    return jsonify(res)
+
+  # 准备
+  password = hashlib.md5(password.encode()).hexdigest()
+  user = Users()
+
+  if session.get('roleid') == 1:
+    result1 = user.find_user_by_userid(userid)
+    if result1[0].roleid == 2:
+      result = user.change_password(userid,password)
+    else:
+      res = {'code':10002,'message':'没有权限','success':False}
+      return jsonify(res)
+  else:
+    result = user.change_password(userid,password)
+ 
+  if result:
+    res = {'code':10000,'message':'更新成功','success':True}
+  else:
+    res = {'code':10002,'message':'操作失败','success':False}
+
+  return jsonify(res)

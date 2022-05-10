@@ -3,7 +3,7 @@ from model.record import Record
 from model.account import Account
 from model.count import Count
 from common import utlis,counts
-import math
+import math,calendar
 jizhang = Blueprint('jizhang',__name__)
 
 @jizhang.before_request
@@ -41,12 +41,13 @@ def add_record():
   result = record.insert_record(category,amount,recordtime,inandouttype,note,payid)
   # print(result)
   if result:
+    count = Count()
+    count.insert_money(amount,recordtime,inandouttype)
     if payid:
       account = Account()
       account.update_balance(payid,amount)
 
-      count = Count()
-      count.insert_money(amount,recordtime,inandouttype)
+      
 
     res = {'code':10000,'message':'操作成功','success':True}
   else:
@@ -170,6 +171,7 @@ def get_account(recordid):
 
   return jsonify(res)
 
+# 搜索
 @jizhang.route('/recordlist',methods=['POST'])
 def searchrecord():
   page = int(request.args.get('page'))
@@ -223,12 +225,13 @@ def add_records():
   # json 处理传过来的payload数据
   records = request.form.get("records")
   data_list = json.loads(records)
-  print(data_list)
+  # print(data_list)
   record = Record()
   result = record.batch_records(data_list)
 
 
   if result:
+    counts.update_count()
     res = {'code':10000,'message':'操作成功','success':True}
   else:
     res = {'code':10002,'message':'操作失败','success':False}
@@ -267,5 +270,58 @@ def export_records():
   data['rows'] = rows
   res = {'code':10000,'message':'操作成功','success':True}
   res['data'] = data
+
+  return jsonify(res)
+
+# 记录详情
+@jizhang.route('/recorddetail',methods=['POST'])
+def recorddetail():
+  page = int(request.args.get('page'))
+  size = int(request.args.get('size'))
+  total = int(request.args.get('total'))
+
+  keyword = request.form.get('keyword').strip()
+  print(keyword)
+
+  start = (page - 1) * size
+  record = Record()
+  mark = 0
+  # 判断 keyword 类型
+  if '-' in keyword:
+    mark = 1
+    result = keyword.split('-')
+    result = calendar.monthrange(int(result[0]),int(result[1]))
+    days = result[1]
+    start_day = keyword + '-' + '1'
+    end_day = keyword + '-' + str(days)
+    print(start_day,end_day)
+    result = record.find_record_by_date(start_day,end_day,start,size)
+    
+  else:
+    # print('2')
+    result = record.find_record_by_payid(keyword,start,size)
+    
+
+
+  
+  print(result)
+  if result:
+    data = list(result)
+    print(data)
+    rows = utlis.model_to_list(data[0])
+    account = Account()
+    if mark == 1:
+      for item in rows:
+        if item['payid'] != None:
+          res = account.find_by_payid(item['payid'])
+          item['payid'] = res.payname
+
+
+    total = data[1]    
+    data = {}
+    data['rows'] = rows
+    data['total'] = total
+    res = {'code':10000,'message':'操作成功','success':True}
+    res['data'] = data
 
   return jsonify(res)

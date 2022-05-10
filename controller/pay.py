@@ -45,6 +45,10 @@ def add_account():
   paytypeid = request.form.get('paytypeid').strip()
 
   # 校验信息
+  num = (int(paytypeid) // 10) % 10
+  # print(num)
+  if num == 2:
+    balance = - float(balance) 
 
   #插入 账户
   account = Account()
